@@ -1,5 +1,7 @@
 import './style.css'
 import * as THREE from 'three';
+import {GLTFLoader} from 'three/examples/jsm/loaders/GLTFLoader'
+import {DRACOLoader} from 'three/examples/jsm/loaders/DRACOLoader'
 import fragmentShader from './shaders/fragment.glsl'
 import vertexShader from './shaders/vertex.glsl'
 
