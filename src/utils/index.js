@@ -12,3 +12,4 @@ export function GetSceneBounds(renderer = new WebGLRenderer(),camera = new Persp
     const width =  height * aspect;
     return {width,height}
 }
+

@@ -4,6 +4,10 @@ import {GLTFLoader} from 'three/examples/jsm/loaders/GLTFLoader'
 import {DRACOLoader} from 'three/examples/jsm/loaders/DRACOLoader'
 import fragmentShader from './shaders/fragment.glsl'
 import vertexShader from './shaders/vertex.glsl'
+import { PlaneGeometry, WebGPURenderer } from 'three/webgpu';
+import { GetSceneBounds } from './utils';
+import { getMaterial } from './ascii'
+
 
 const {PI} = Math
 
@@ -14,18 +18,11 @@ canvas.height = innerHeight;
 
 const scene = new THREE.Scene()
 
-const renderer = new THREE.WebGLRenderer({canvas,antialias:true,alpha:true})
+const renderer = new WebGPURenderer({canvas,antialias:true,alpha:true})
 
 const camera = new THREE.PerspectiveCamera(75,innerWidth/innerHeight,1,1000)
 camera.position.z = 5
 
-const material = new THREE.ShaderMaterial({
-  fragmentShader,
-  vertexShader,
-  uniforms:{
-    uTime:{value:0}
-  }
-})
 
 
 const Manager = new THREE.LoadingManager();
@@ -36,21 +33,53 @@ Draco.setDecoderPath('/draco/')
 Draco.setDecoderConfig({type: 'wasm'})
 GLB.setDRACOLoader(Draco)
 
+const {width,height} = GetSceneBounds(renderer,camera)
+
+let size = .2;
+
+const row = Math.ceil(height / (size)) + 1
+const column = Math.ceil(width / (size )) + 1
+const instances = row * column
+
+console.log(row,column)
 
 
-const Cube = new THREE.Mesh(
-  new THREE.BoxGeometry(2,2,2),
-  material
+const Plane = new PlaneGeometry(size,size,1,1)
+const position = new Float32Array(instances * 3)
+const material = getMaterial()
+
+const Mesh = new THREE.InstancedMesh(
+  Plane,
+  material,
+  instances
 )
 
-Cube.rotation.set(-PI/4,PI/4,PI/2)
+for(let r = 0; r < row; r++) {
+  for(let c = 0; c < column; c++) {
+    const index = (r * column) + c;
 
-scene.add(Cube)
+    const matrix = new THREE.Matrix4()
+    position[index + 0] = (c - column / 2) * size
+    position[index + 1] = (r - row / 2) * size 
+    position[index + 2] = 0 
+
+    matrix.setPosition((c - column / 2) * size,(r - row / 2) * size,0)
+
+    Mesh.setMatrixAt(index,matrix)
+    
+
+  }
+}
+
+Mesh.instanceMatrix.needsUpdate = true;
+
+scene.add(Mesh)
+
+
 
 
 function Animate(){
-  Cube.rotation.z += .01
-  renderer.render(scene,camera)
+  renderer.renderAsync(scene,camera)
   requestAnimationFrame(Animate)
 }
 

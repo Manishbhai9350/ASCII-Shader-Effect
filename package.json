@@ -14,6 +14,7 @@
   "dependencies": {
     "postprocessing": "^6.37.6",
     "three": "^0.178.0",
+    "tsl": "^1.0.27",
     "vite-plugin-glsl": "^1.5.1"
   }
 }
